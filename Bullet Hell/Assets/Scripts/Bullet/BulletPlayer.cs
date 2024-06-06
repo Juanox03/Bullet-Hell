@@ -22,10 +22,10 @@ public class BulletPlayer : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        var enemy = other.GetComponent<Entity>();
-        if(enemy != null)
+        var entity = other.GetComponent<Entity>();
+        if(entity != null)
         {
-            enemy.GetDamage(dmg);
+            entity.GetDamage(dmg);
             Destroy(gameObject);
         }
 

@@ -38,6 +38,6 @@ public class Player : Entity
 
     public override void GetDamage(float dmg)
     {
-        throw new System.NotImplementedException();
+        Debug.Log("Daño");
     }
 }
