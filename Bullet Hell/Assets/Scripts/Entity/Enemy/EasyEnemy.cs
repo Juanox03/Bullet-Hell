@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,7 +8,9 @@ public class EasyEnemy : Enemy
 {
     enum ShootType
     {
-        Lineal
+        Lineal,
+        Espiral,
+        MultiEspiral
     }
 
     [Header("Shoot Type")]
@@ -18,16 +21,21 @@ public class EasyEnemy : Enemy
     [SerializeField] float _currentHealth;
     [SerializeField] float _maxHealth;
 
-    Vector3 _pointToMove;
-    Vector3 _point1;
-    Vector3 _point2;
+    [Header("Phase Attack")]
+    int _totalPhases = 3;
+    [SerializeField] int _currentPhase = 1;
+
+    [Header("Wachines")]
+    [SerializeField] GameObject _wachinContainer;
+    [SerializeField] List<GameObject> _wachines = new();
+
+    Factory<BulletEnemy> _factory;
+    ObjectPool<BulletEnemy> _objectPool;
 
     private void Start()
     {
-        _point1 = new Vector3(transform.position.x + 8, transform.position.y, transform.position.z);
-        _point2 = new Vector3(transform.position.x - 8, transform.position.y, transform.position.z);
-
-        _pointToMove = _point1;
+        _factory = new BulletEnemyFactory(_bulletPrefab);
+        _objectPool = new ObjectPool<BulletEnemy>(_factory.GetObj, BulletEnemy.TurnOff, BulletEnemy.TurnOn, 4);
     }
 
     private void Update()
@@ -38,40 +46,104 @@ public class EasyEnemy : Enemy
             {
                 case ShootType.Lineal:
                     ShootLineal();
-                    MoveLineal();
+                    break;
+                case ShootType.Espiral:
+                    ShootEspiral();
+                    break;
+                case ShootType.MultiEspiral:
+                    ShootMultiEspiral();
                     break;
                 default:
                     break;
             }
         }
-    }
 
+        if (_currentPhase == 1)
+        {
+            _shootType = ShootType.Lineal;
+        }
+        if (_currentPhase == 2)
+        {
+            _shootType = ShootType.Espiral;
+        }
+        if (_currentPhase == 3)
+        {
+            _shootType = ShootType.MultiEspiral;
+            _wachinContainer.SetActive(true);
+        }
+
+        if (_currentHealth <= 0)
+        {
+            _currentPhase += 1;
+            if (_currentPhase <= _totalPhases)
+            {
+                StartCoroutine(ChargeLife());
+            }
+            else
+            {
+                Destroy(this);
+            }
+        }
+}
     #region Shoot Lineal
     private void ShootLineal()
     {
+        _fireRate = 0.2f;
+
         _timer += Time.deltaTime;
 
         if(_timer > _fireRate)
         {
-            Instantiate(_bulletPrefab, _spawner.position, _spawner.rotation);
+            var bullet = _objectPool.Get();
+            bullet.AddReference(_objectPool);
+            bullet.transform.position = _spawner.position;
+            bullet.transform.forward = _spawner.forward;
+            var direction = (_playerTarget.position - _spawner.position).normalized;
+            bullet.transform.forward = direction;
 
             _timer = 0;
         }
-
     }
+    #endregion
 
-    private void MoveLineal()
+    #region Shoot Espiral
+    private void ShootEspiral()
     {
-        transform.position = Vector3.Lerp(transform.position, _pointToMove, _speed * Time.deltaTime);
+        _fireRate = 0.1f;
 
-        if(Vector3.Distance(transform.position, _pointToMove) < 0.3f)
+        _timer += Time.deltaTime;
+
+        if (_timer > _fireRate)
         {
-            _pointToMove = _point2;
+            var bullet = _objectPool.Get();
+            bullet.AddReference(_objectPool);
+            bullet.transform.position = _spawner.position;
+            bullet.transform.forward = _spawner.forward;
+            _spawner.eulerAngles = new Vector3(0, _spawner.eulerAngles.y + 10, 0);
+            _timer = 0;
         }
-        
-        if(Vector3.Distance(transform.position, _pointToMove) < 0.3f)
+    }
+    #endregion
+
+    #region Shoot MultiEspiral
+    private void ShootMultiEspiral()
+    {
+        _fireRate = 0.2f;
+
+        _timer += Time.deltaTime;
+
+        if (_timer > _fireRate)
         {
-            _pointToMove = _point1;
+            foreach (var item in _wachines)
+            {
+                var bullet = _objectPool.Get();
+                bullet.AddReference(_objectPool);
+                bullet.transform.position = _spawner.position;
+                bullet.transform.forward = _spawner.forward;
+            }
+            _spawner.eulerAngles = new Vector3(0, _spawner.eulerAngles.y + 10, 0);
+
+            _timer = 0;
         }
     }
     #endregion
@@ -81,5 +153,21 @@ public class EasyEnemy : Enemy
         _currentHealth -= dmg;
 
         _healthBar.fillAmount = _currentHealth / _maxHealth;
+    }
+
+    IEnumerator ChargeLife()
+    {
+        _shield.SetActive(true);
+        while (_currentHealth < _maxHealth)
+        {
+            //_currentHealth = 0;
+            _currentHealth += Time.deltaTime * 200;
+            if (_currentHealth >= _maxHealth) _currentHealth = _maxHealth;
+
+            _healthBar.fillAmount = _currentHealth / _maxHealth;
+
+            yield return null;
+        }
+        _shield.SetActive(false);
     }
 }

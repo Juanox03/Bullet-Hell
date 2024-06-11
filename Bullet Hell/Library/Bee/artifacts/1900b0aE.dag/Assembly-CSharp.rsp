@@ -354,12 +354,17 @@
 -analyzer:"J:/Programas/Unity/Hub/Editor/2022.3.26f1/Editor/Data/Tools/Unity.SourceGenerators/Unity.SourceGenerators.dll"
 "Assets/Scripts/Bullet/BulletEnemy.cs"
 "Assets/Scripts/Bullet/BulletPlayer.cs"
+"Assets/Scripts/BulletEnemyFactory.cs"
+"Assets/Scripts/BulletPlayerFactory.cs"
 "Assets/Scripts/Entity/Enemy/EasyEnemy.cs"
 "Assets/Scripts/Entity/Enemy/Enemy.cs"
 "Assets/Scripts/Entity/Entity.cs"
 "Assets/Scripts/Entity/Player/Player.cs"
 "Assets/Scripts/Entity/Player/PlayerInputs.cs"
 "Assets/Scripts/Entity/Player/PlayerView.cs"
+"Assets/Scripts/Factory.cs"
+"Assets/Scripts/GameManager.cs"
+"Assets/Scripts/ObjectPool.cs"
 -langversion:9.0
 /deterministic
 /optimize+

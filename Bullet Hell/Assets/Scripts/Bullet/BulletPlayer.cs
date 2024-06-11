@@ -8,6 +8,9 @@ public class BulletPlayer : MonoBehaviour
     [SerializeField] float dmg;
     [SerializeField] float _lifeTime;
 
+    ObjectPool<BulletPlayer> _objectPool;
+    public float counter;
+
     private void Update()
     {
         _lifeTime -= Time.deltaTime;
@@ -18,6 +21,29 @@ public class BulletPlayer : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        counter += Time.deltaTime;
+
+        if (counter >= 2)
+        {
+            _objectPool.StockAdd(this);
+        }
+    }
+
+    public void AddReference(ObjectPool<BulletPlayer> op)
+    {
+        _objectPool = op;
+    }
+
+    public static void TurnOff(BulletPlayer bullet)
+    {
+        bullet.gameObject.SetActive(false);
+    }
+
+    public static void TurnOn(BulletPlayer bullet)
+    {
+        bullet.counter = 0;
+        bullet.gameObject.SetActive(true);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -29,5 +55,9 @@ public class BulletPlayer : MonoBehaviour
             Destroy(gameObject);
         }
 
+        if(other.CompareTag("Shield Enemy"))
+        {
+            Destroy(gameObject);
+        }
     }
 }

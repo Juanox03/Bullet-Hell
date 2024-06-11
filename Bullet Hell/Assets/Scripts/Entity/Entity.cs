@@ -8,7 +8,6 @@ public abstract class Entity : MonoBehaviour
     [SerializeField] protected float _speed;
 
     [Header("Bullet Config")]
-    [SerializeField] protected GameObject _bulletPrefab;
     [SerializeField] protected Transform _spawner;
     protected float _timer;
     [SerializeField] protected float _fireRate;

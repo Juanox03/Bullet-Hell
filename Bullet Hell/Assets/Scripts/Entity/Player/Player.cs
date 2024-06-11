@@ -4,13 +4,21 @@ using UnityEngine;
 
 public class Player : Entity
 {
+    [SerializeField] BulletPlayer _bulletPrefab;
+
     PlayerInputs _inputs;
     PlayerView _view;
+
+    Factory<BulletPlayer> _factory;
+    ObjectPool<BulletPlayer> _objectPool;
 
     private void Start()
     {
         _inputs = new PlayerInputs(this);
         _view = new PlayerView();
+
+        _factory = new BulletPlayerFactory(_bulletPrefab);
+        _objectPool = new ObjectPool<BulletPlayer>(_factory.GetObj, BulletPlayer.TurnOff, BulletPlayer.TurnOn, 4);
     }
 
     private void Update()
@@ -30,7 +38,10 @@ public class Player : Entity
 
         if(_timer >= _fireRate)
         {
-            Instantiate(_bulletPrefab, _spawner.position, _spawner.rotation);
+            var bullet = _objectPool.Get();
+            bullet.AddReference(_objectPool);
+            bullet.transform.position = _spawner.position;
+            bullet.transform.forward = _spawner.forward;
 
             _timer = 0;
         }
